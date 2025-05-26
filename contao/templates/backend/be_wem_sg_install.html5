@@ -1,0 +1,687 @@
+<!-- Load Libraries -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!-- Display messages -->
+<?= Message::generate(); ?>
+
+<div id="tl_buttons">
+  <a class="header_button header_sg_cache_clear executeCmdPhp" href="<?= $this->request ?>" data-cmd="cache:clear" title="Refresh Cache" accesskey="r">Refresh Cache</a>
+  <?php if($this->configurationManagerBtnHref): ?>
+  	<a class="header_button header_sg_configuration" href="<?= ampersand($this->configurationManagerBtnHref) ?>" title="<?= Contao\StringUtil::specialchars($this->configurationManagerBtnTitle) ?>" accesskey="b"><?= $this->configurationManagerBtnButton ?></a>
+  <?php endif; ?>
+  <?php if($this->backupManagerBtnHref): ?>
+  	<a class="header_button header_sg_backup" href="<?= ampersand($this->backupManagerBtnHref) ?>" title="<?= Contao\StringUtil::specialchars($this->backupManagerBtnTitle) ?>" accesskey="b"><?= $this->backupManagerBtnButton ?></a>
+  <?php endif; ?>
+  <?php if($this->updateManagerBtnHref): ?>
+  	<a  class="header_button header_sg_update" href="<?= ampersand($this->updateManagerBtnHref) ?>" title="<?= Contao\StringUtil::specialchars($this->updateManagerBtnTitle) ?>" accesskey="b"><?= $this->updateManagerBtnButton ?> (<?= $this->update_to_play_number ?? "0"; ?>)</a>
+  <?php endif; ?>
+</div>
+
+
+<!-- Scripts -->
+<script type="text/javascript">
+	var j = jQuery.noConflict();
+
+	// Toastr Options
+	toastr.options.closeButton = true;
+	toastr.options.timeOut = 5000;
+	toastr.options.extendedTimeOut = 0;
+
+	j(document).ready(function(){
+		/**
+		 * Store the "submit" clicked for the form
+		 */
+		j('#tl_wem_sg_install').on('click', '.block .tl_submit', function(e){
+			j(this).closest('form').find('input.btnAction').val(j(this).attr('value'));
+		});
+
+
+		applyStepBehaviour();
+		/**
+		 * Handle modal openers
+		 */
+		j('#tl_wem_sg_install').on('click', '.block .openContaoModal', function(e){
+			e.preventDefault();
+			Backend.openModalIframe({'title':this.title,'url':this.href});
+		});
+
+		j('#tl_wem_sg_install').on('click', '.block .openSmartgearModal', function(e){
+			e.preventDefault();
+			var w = 768;
+			var h = (window.getSize().y-180).toInt();
+			if(parseInt(j(this).data('modal-width')) > 0)
+				w = parseInt(j(this).data('modal-width'));
+			if(parseInt(j(this).data('modal-height')) > 0)
+				h = parseInt(j(this).data('modal-height'));
+			var title = j(this).data('title');
+			var href = j(this).attr('href');		
+			
+			var M = new SimpleModal({
+				'width': w,
+				'draggable': false,
+				'overlayOpacity': .5,
+				'onShow': function() { document.body.setStyle('overflow', 'hidden'); },
+				'onHide': function() { document.body.setStyle('overflow', 'auto'); }
+			});
+			M.addButton(Contao.lang.close, 'btn', function() {
+				this.hide();
+			});
+			M.show({
+				'title':title
+				,'contents':'<iframe src="'+href+'" name="simple-modal-contents" width="100%" height="'+h+'" frameborder="0"></iframe>'
+				,'model':'modal'
+			});
+		});
+
+		/**
+		 * Handle update buttons
+		 */
+		j('.sgUpdateAll').bind('click', function(e) {
+			e.preventDefault();
+			var blnReload = true;
+			j(this).parent().find('li').each(function() {
+				applyUpdate(j(this).data('update')).then(function(r) {
+					toastr[r["status"]](r["msg"]);
+				}).catch(function(e) {
+					toastr.error(e, "Une erreur est survenue :");
+					blnReload = false;
+					return false;
+				});
+			});
+
+			if(blnReload) {
+				setTimeout(function() {
+					location.reload()
+				}, 2500);
+			}
+		});
+
+		/**
+		 * Handle command buttons
+		 */
+		j('#tl_buttons').on('click', '.executeCmd', function(e){
+			e.preventDefault();
+			executeCmd(j(this).data('cmd')).then(function(r) {
+				toastr[r["status"]](r["msg"]);
+			}).catch(function(e) {
+				toastr.error(e, "Une erreur est survenue :");
+			});
+		});
+
+		/**
+		 * Handle command buttons
+		 */
+		j('#tl_buttons').on('click', '.executeCmdPhp', function(e){
+			e.preventDefault();
+			toastr.info('doing ...')
+			executeCmdPhp(j(this).data('cmd')).then(function(r) {
+				toastr[r["status"]](r["msg"]);
+			}).catch(function(e) {
+				toastr.error(e, "Une erreur est survenue :");
+			});
+		});
+
+		/**
+		 * Handle command buttons
+		 */
+		j('#tl_buttons').on('click', '.executeCmdLive', function(e){
+			e.preventDefault();
+			executeCmdLive(
+				j(this).data('type'),
+				j(this).data('module'),
+				j(this).data('action'),
+				j(this).data('result-container-id'),
+			).then(function(r) {
+				toastr[r["status"]](r["msg"]);
+			}).catch(function(e) {
+				toastr.error(e, "Une erreur est survenue :");
+			});
+		});
+
+		/**
+		 * Replace normal form submit by an AJAX one
+		 */
+		j('#tl_wem_sg_install').on('submit', '.block-default form', function(e){
+			e.preventDefault();
+			var isUpload = false;
+			var ctn = j(this).closest('.block');
+			ctn.find('.loader').addClass("active");
+
+			var objFields = new FormData();
+			objFields.append("TL_WEM_AJAX", 1 );
+			objFields.append("wem_module", 'be_smartgear' );
+
+			j(this).find('input').each(function(){
+				switch(j(this).attr('type')){
+					case "file":
+						var files = j(this)[0].files;
+						isUpload = true;
+			        
+		        // Check file selected or not
+		        for(let i in files){
+							objFields.append(j(this).attr('name'),files[i]);
+		        }
+					break;
+					case "checkbox":
+						if(j(this).prop('checked')){
+							objFields.append(j(this).attr('name'),j(this).val());
+						}
+					break;
+					default:
+						objFields.append(j(this).attr('name'),j(this).val());
+					break;
+				}
+			});
+
+
+
+			j(this).find('select').each(function(){
+				if(j(this).attr('multiple')){
+					j(this).val().forEach((item) => objFields.append(j(this).attr('name'), item))
+				}else{
+					objFields.append(j(this).attr('name'),j(this).val());
+				}
+			});
+
+			j(this).find('textarea').each(function(){
+				objFields.append(j(this).attr('name'),j(this).val());
+			});
+
+			var ajaxOptions = {
+				method: "POST"
+				// ,timeout:60000 // 1 minute
+				// ,timeout:300000 // 5 minutes
+				,data: objFields
+			};
+			// if(isUpload){
+				ajaxOptions = Object.assign(ajaxOptions,{contentType: false,processData: false});
+			// }
+
+			j.ajax(ajaxOptions)
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]){
+						toastr.error(results["msg"], "Une erreur est survenue :");
+					}
+
+					// Display a toastr if asked
+					if(results["toastr"]){
+						toastr[results["toastr"]["status"]](results["toastr"]["msg"]);
+					}
+
+					// Callbakcs if asked
+					if(results["callbacks"]){
+						for(var i in results["callbacks"]){
+							if("object" == typeof(results["callbacks"][i])){
+								window[results["callbacks"][i].method].apply(null, results["callbacks"][i].args);
+							}
+						}
+					}
+				}
+				catch(err){
+	       			toastr.error(err);
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				toastr.error(textStatus+"<br>"+errorThrown);
+				console.log(jqXHR);
+				console.log(textStatus);
+				console.log(errorThrown);
+			})
+			.always(function(){
+				ctn.find('.loader').removeClass("active");
+			});
+		});
+	});
+
+
+
+	function applyStepBehaviour()
+	{
+		/**
+		 * Store the "submit" clicked for the form
+		 */
+		j('#sg_steps').on('click', 'a.step', function(e){
+			e.preventDefault();
+			var ctn = j('#tl_wem_sg_install .blocks.install .block').first();
+			ctn.find('.loader').addClass("active");
+			var step = j(this);
+
+			setStep(step.data('type'),step.data('module'),step.data('index')).then(function(r) {
+				refreshBlock(step.parents('.block')[0].id);
+			}).catch(function(e) {
+				toastr.error(e, "Une erreur est survenue :");
+			}).finally(function() {
+				ctn.find('.loader').removeClass("active");
+			});
+		});
+	}
+
+	/**
+	 * Refresh all the blocks in the page
+	 */
+	function refreshAllBlocks(){
+		j('#tl_wem_sg_install .block').each(function(){
+			refreshBlock(j(this).attr('id'));
+		});
+	}
+
+	function toastrDisplay(type,msg){
+		toastr[type](msg);
+	}
+
+	function reload(){
+		window.location.reload();
+	}
+
+	function replaceBlockContent(id, content){
+		var ctn = j('div#'+id);
+		ctn.replaceWith(content);
+	}
+
+	/**
+	 * Refresh a block with its ID
+	 */
+	function refreshBlock(id){
+		var ctn = j('div#'+id);
+		ctn.find('.loader').addClass("active");
+
+		getBlock(ctn.data("type"), ctn.data("module")).then(function(r) {
+			replaceBlockContent(id,r);
+			applyStepBehaviour();
+		}).catch(function(e) {
+			toastr.error(e, "Une erreur est survenue :");
+		}).finally(function() {
+			ctn.find('.loader').removeClass("active");
+		});
+	}
+
+	/**
+	 * Refresh steps
+	 */
+	function refreshSteps(strType, strModule){
+		var ctn = j('div#sg_steps');
+		ctn.find('.loader').addClass("active");
+
+		getSteps(strType, strModule).then(function(r) {
+			ctn.replaceWith(r);
+		}).catch(function(e) {
+			toastr.error(e, "Une erreur est survenue :");
+		}).finally(function() {
+			ctn.find('.loader').removeClass("active");
+		});
+	}
+
+	/**
+	 * Load the next step
+	 */
+	function loadNextStep(){
+		getNextStep().then(function(r) {
+			// Refresh the steps
+			refreshSteps();
+
+			// Get the next block
+			var ctn = j('div.block-install');
+			getBlock(r.type, r.name).then(function(r) {
+				ctn.replaceWith(r);
+			}).catch(function(e) {
+				toastr.error(e, "Une erreur est survenue :");
+			}).finally(function() {
+				ctn.find('.loader').removeClass("active");
+			});
+
+		}).catch(function(e) {
+			toastr.error(e, "Une erreur est survenue :");
+		});
+	}
+
+	/**
+	 * Retrieve the next step
+	 */
+	function getNextStep() {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'getNextStep'
+			};
+
+			j.ajax({
+				method: "POST"
+				,data: objFields
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results['step']);
+				}
+				catch(err){
+	       			reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(jqXHR, textStatus, errorThrown); 
+			});
+		});
+	}
+
+	/**
+	 * Set the new step
+	 */
+	function setStep(strType, strModule, step) {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'setStep'
+				,'step':step
+				,'type':strType
+				,'module':strModule
+			};
+
+			j.ajax({
+				method: "POST"
+				,data: objFields
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results['step']);
+				}
+				catch(err){
+	       			reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(jqXHR, textStatus, errorThrown); 
+			});
+		});
+	}
+
+	function getSteps(strType, strModule)	{
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'getSteps'
+				,'type':strType
+				,'module': strModule
+			};
+
+			j.ajax({
+				method: "POST"
+				,data: objFields
+			})
+			.done(function(msg){
+				resolve(msg.replace(/<!--[\s\S]*?-->/g, ""));
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(jqXHR, textStatus, errorThrown); 
+			});
+		});
+	}
+
+	function getBlock(strType, strModule) {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'parse'
+				,'format':'html'
+				,'type': strType
+				,'module': strModule
+			};
+
+			j.ajax({
+				method: "POST"
+				,data: objFields
+			})
+			.done(function(msg){
+				resolve(msg.replace(/<!--[\s\S]*?-->/g, ""));
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(jqXHR, textStatus, errorThrown); 
+			});
+		});
+	}
+
+	function applyUpdate(update) {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear_update'
+				,'action':update
+			};
+
+			j.ajax({
+				method: "POST"
+				,data: objFields
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results);
+				}
+				catch(err){
+	       			reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(textStatus+"<br>"+errorThrown);
+			})
+		});
+	}
+
+	function executeCmdPhp(cmd) {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'executeCmdPhp'
+				,'cmd':cmd
+			};
+
+			j.ajax({
+				method: "POST"
+				,timeout:10000
+				,data: objFields
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results);
+				}
+				catch(err){
+	       			reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(textStatus+"<br>"+errorThrown);
+			})
+		});
+	}
+
+	function executeCmd(cmd) {
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':'executeCmd'
+				,'cmd':cmd
+			};
+
+			j.ajax({
+				method: "POST"
+				,timeout:10000
+				,data: objFields
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+					var results = j.parseJSON(msg);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results);
+				}
+				catch(err){
+	       			reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(textStatus+"<br>"+errorThrown);
+			})
+		});
+	}
+
+	function executeCmdLive(strType, strModule, strAction, resultContainerId, aditionnalParameters) {
+		aditionnalParameters = aditionnalParameters || {};
+		return new Promise((resolve, reject) => {
+			var objFields = {
+				'TL_WEM_AJAX':1
+				,'REQUEST_TOKEN':"<?= $this->token; ?>"
+				,'wem_module':'be_smartgear'
+				,'action':strAction
+				,'type': strType
+				,'module': strModule
+			};
+			objFields = Object.assign(objFields,aditionnalParameters);
+			var lastResponseLength = 0;
+			j.ajax({
+				method: "POST"
+				// ,timeout:10000
+				,data: objFields
+				,headers:{
+					'Cache-Control': 'no-cache, must-revalidate'
+				}
+				,xhrFields: {
+          // Getting on progress streaming response
+          onprogress: function(e)
+          {
+            var progressResponse;
+            var response = e.currentTarget.response;
+            progressResponse = typeof lastResponseLength === "undefined" ? response : response.substring(lastResponseLength);
+            lastResponseLength = response.length;
+            if(progressResponse.slice(-1) == ","){
+            	progressResponse = progressResponse.substring(progressResponse.length - 1);
+            }
+            let json = j.parseJSON("{\"full\":[" + progressResponse + "]}");
+            let html = '';
+            for(let i in json.full){
+          		if(typeof json.full[i].data !== "undefined"){
+	            	html = html.concat(json.full[i].data);
+	            }
+            }
+            j('#'+resultContainerId).html(html);
+          }
+        }
+			})
+			.done(function(msg){
+				// We expect a JSON, so send error if this is not a JSON. Yep, Racist, I know.
+				try{
+			 		msg = "{\"full\":[" + msg.replace(/\}\{/gi, "},{") + "]}";
+					var json = j.parseJSON(msg);
+					results = json.full[json.full.length - 1];
+					let html = '';
+          for(let i in json.full){
+          		if(typeof json.full[i].data !== "undefined"){
+	            	html = html.concat(json.full[i].data);
+	            }
+          }
+          html = html.concat(results.msg);
+          j('#'+resultContainerId).html(html);
+
+					// Handle actions errors
+					if("error" === results["status"]) {
+						reject(results["msg"]);
+					}
+
+					// Notify everything goes well
+					resolve(results);
+				}
+				catch(err){
+	       	reject(err); 
+				}
+			})
+			.fail(function(jqXHR, textStatus, errorThrown){
+				reject(textStatus+"<br>"+errorThrown);
+			})
+		});
+	}
+</script>
+
+<!-- Display Module -->
+<div id="tl_wem_sg_install" class="wem_module">
+
+	<?php if($this->steps): ?>
+	<?= $this->steps ?>
+	<?php endif; ?>
+	
+	<?php if ($this->logs && !empty($this->logs)): ?>
+	<div class="logs">
+		<div class="content_container">
+			<?php foreach ($this->logs as $log): ?>
+			<p class="<?= $log['status']; ?>"><?= $log['msg']; ?></p>
+			<?php endforeach; ?>
+		</div>
+	</div>
+	<?php endif; ?>
+
+	<?php if($this->blocks): ?>
+	<?php foreach ($this->blocks as $type => $blocks): ?>
+	<div class="blocks <?= $type; ?>">
+		<?= implode('', $blocks); ?>
+	</div>
+	<?php endforeach; ?>
+	<?php endif; ?>
+</div>
