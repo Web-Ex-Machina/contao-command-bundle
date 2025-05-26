@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 /*
- * Skeleton Bundle for Contao Open Source CMS
- * @author     Web Ex Machina
+ * Command Bundle for Contao 5 Open Source CMS
+ * Copyright (c) 2025-2025 Web ex Machina
  *
- * @see        https://github.com/Web-Ex-Machina/contao-skeleton-bundle/
- * @license    https://www.apache.org/licenses/LICENSE-2.0 Apache 2.0
+ * @category ContaoBundle
+ * @package  Web-Ex-Machina/contao-command-bundle
+ * @author   Web ex Machina <contact@webexmachina.fr>
+ * @link     https://github.com/Web-Ex-Machina/contao-command-bundle/
  */
 
 namespace WEM\CommandBundle;

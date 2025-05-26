@@ -17,8 +17,7 @@ Copyright (c) 2025-".date("Y")." Web ex Machina
 @category ContaoBundle
 @package  Web-Ex-Machina/contao-command-bundle
 @author   Web ex Machina <contact@webexmachina.fr>
-@link     https://github.com/Web-Ex-Machina/contao-command-bundle/
- */"])
+@link     https://github.com/Web-Ex-Machina/contao-command-bundle/"])
 
     ->withPaths([
     __DIR__ . '/src',
