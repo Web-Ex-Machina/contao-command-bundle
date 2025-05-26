@@ -25,7 +25,8 @@
         "rector": "vendor/bin/rector p --ansi",
         "rector-dry": "vendor/bin/rector p --dry-run --ansi",
         "check-cs": "vendor/bin/ecs check --ansi",
-        "fix-cs": "vendor/bin/ecs check --fix --ansi"
+        "fix-cs": "vendor/bin/ecs check --fix --ansi",
+        "phpstan": "vendor/bin/phpstan analyse --level max contao src tests"
     },
     "extra":{
         "contao-manager-plugin": "WEM\\CommandBundle\\ContaoManager\\Plugin"

@@ -19,6 +19,7 @@ use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
 use Contao\ManagerPlugin\Routing\RoutingPluginInterface;
 use Symfony\Component\Config\Loader\LoaderResolverInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Routing\RouteCollection;
 
 class Plugin implements BundlePluginInterface, RoutingPluginInterface
 {
@@ -27,7 +28,7 @@ class Plugin implements BundlePluginInterface, RoutingPluginInterface
         return [];
     }
 
-    public function getRouteCollection(LoaderResolverInterface $resolver, KernelInterface $kernel)
+    public function getRouteCollection(LoaderResolverInterface $resolver, KernelInterface $kernel): ?RouteCollection
     {
         return $resolver
             ->resolve(__DIR__ . '/../Controller', 'attribute')
