@@ -38,32 +38,82 @@ class BackendCommandController extends AbstractBackendController
     {
         $commandes = [
             'about' => 'À propos de Contao',
-            'cache-clear' => 'contao-console cache:clear',
-            'cache-warmup' => 'contao-console cache:warmup',
-            'symlinks' => 'contao-console contao:symlinks',
-            'resize-images' => 'contao-console contao:resize-images',
-            'debug' => 'contao-console debug:*',
-            'env-dump' => 'contao-console dotenv:dump',
-            'lint' => 'contao-console lint:*',
-            'mailer-test' => 'contao-console mailer:test',
-            'router-match' => 'contao-console router:match'
+            'cache-clear' => 'Vider le cache',
+            'cache-warmup' => 'Recharger le cache',
+            'symlinks' => 'Reconstruire les liens symboliques',
+            'resize-images' => 'Redimensionner les images qui ne le seraient pas',
+
+            'debug-autowiring' => 'List classes/interfaces you can use for autowiring',
+            'debug-config' => 'Dump the current configuration for an extension',
+            'debug-container' => 'Display current services for an application',
+            'debug-contao-twig' => 'Displays the Contao template hierarchy.',
+            'debug-dca' => 'Dumps the DCA configuration for a table.',
+            'debug-dotenv' => 'List all dotenv files with variables and values',
+            'debug-event-dispatcher' => 'Display configured listeners for an application',
+            'debug-firewall' => 'Display information about your security firewall(s)',
+            'debug-fragments' => 'Displays the fragment controller configuration.',
+            'debug-messenger' => 'List messages you can dispatch using the message buses',
+            'debug-pages' => 'Displays the page controller configuration.',
+            'debug-plugins' => 'Displays the Contao Manager plugin configurations.',
+            'debug-router ' => 'Display current routes for an application',
+            'debug-translation' => 'Display translation messages information',
+            'debug-twig' => 'Show a list of twig functions, filters, globals and tests',
+
+            'env-dump' => 'Compiler les fichiers .env vers .env.local.php',
+            'lint-container' => 'Verifier la validité du conteneur de configuration',
+//            'mailer-test' => 'Test mailer',
+            'router-match' => 'Afficher la listes des routes disponibles.'
         ];
 
         $commande = $request->query->get('commande');
-        if ($commande) {
+        $content="";
+        if (isset($commande)) {
             $application = new Application($this->kernel);
             $application->setAutoExit(false);
 
+            $trueCommande = match($commande){
+                'about' => 'about',
+                'cache-clear' => 'cache:clear',
+                'cache-warmup' => 'cache:warmup',
+                'symlinks' => 'contao:symlinks',
+                'resize-images' => 'contao:resize-images',
+                'debug' => 'debug:*',
+                'env-dump' => 'dotenv:dump',
+                'lint-container' => 'lint:container',
+                'mailer-test' => 'mailer:test',
+                'router-match' => 'router:match',
+
+                'debug-autowiring' => 'debug:autowiring',
+                'debug-config' => 'debug:config',
+                'debug-container' => 'debug:container',
+                'debug-contao-twig' => 'debug:contao-twig',
+                'debug-dca' => 'debug:dca',
+                'debug-dotenv' => 'debug:dotenv',
+                'debug-event-dispatcher' => 'debug:event-dispatcher',
+                'debug-firewall' => 'debug:firewall',
+                'debug-fragments' => ' debug:fragments',
+                'debug-messenger'  => 'debug:messenger',
+                'debug-pages' => 'debug:pages',
+                'debug-plugins' => 'debug:plugins',
+                'debug-router ' => 'debug:router',
+                'debug-translation'  => 'debug:translation',
+                'debug-twig' => 'debug:twig',
+                
+                default => 'list'
+            };
+
+
             $input = new ArrayInput([
-                'command' => 'about',
+                'command' => $trueCommande,
                 // (optional) define the value of command arguments
                 //'fooArgument' => 'barValue',
                 // (optional) pass options to the command
-                //'--bar' => 'fooValue',
+                '--env' => 'prod',
                 // (optional) pass options without value
-                //'--baz' => true,
+                '--no-debug' => true,
             ]);
 
+            \set_time_limit(300);
             // You can use NullOutput() if you don't need the output
             $output = new BufferedOutput(
                 OutputInterface::VERBOSITY_NORMAL,
@@ -73,17 +123,15 @@ class BackendCommandController extends AbstractBackendController
 
             // return the output, don't use if you used NullOutput()
             $converter = new AnsiToHtmlConverter();
-            $content = $output->fetch();
 
-            // return new Response(""), if you used NullOutput()
-            return new Response($converter->convert($content));
+            $content = $output->fetch();
         }
 
         return $this->render('@Contao/command_center/commands.html.twig', [
             'title' => 'Lancer une commande',
             'headline' => 'Lancer une commande',
-            //'version' => 'I can overwrite what I want',
             'commandes' => $commandes,
+            'retour'=> isset($converter)?$converter->convert($content):false
         ]);
     }
 }

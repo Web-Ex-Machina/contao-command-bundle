@@ -1,6 +1,6 @@
 {
     "name": "webexmachina/contao-command-bunde",
-    "version": "0.0.2-dev",
+    "version": "0.1-dev",
     "description": "Contao 5 Command Bundle.",
     "type": "contao-bundle",
     "license": "Apache-2.0",

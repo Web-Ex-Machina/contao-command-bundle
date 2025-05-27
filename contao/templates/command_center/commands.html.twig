@@ -6,8 +6,8 @@
     <form>
       <fieldset>
         <label for="commande">Commande</label>
-        <select name="commande" id="commande">
-          <option value="">Select a command</option>
+        <select name="commande" id="commande" required>
+          <option selected disabled value="">Select a command</option>
           {% for key, commande in commandes %}
             <option value="{{ key }}">{{ commande }}</option>
           {% endfor %}
@@ -15,5 +15,8 @@
         <input type="submit" value="Submit">
       </fieldset>
     </form>
+    {% if retour %}
+      <pre style="background-color: black"><code>{{ retour |raw }}</code></pre>
+    {% endif %}
   </div>
 {% endblock %}
