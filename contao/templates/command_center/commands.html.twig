@@ -2,6 +2,18 @@
 
 {% block main_content %}
   <div class="tl_listing_container">
-    Main Content: {{ foo }}
+
+    <form>
+      <fieldset>
+        <label for="commande">Commande</label>
+        <select name="commande" id="commande">
+          <option value="">Select a command</option>
+          {% for key, commande in commandes %}
+            <option value="{{ key }}">{{ commande }}</option>
+          {% endfor %}
+        </select>
+        <input type="submit" value="Submit">
+      </fieldset>
+    </form>
   </div>
 {% endblock %}

@@ -7,5 +7,10 @@ services:
       '$projectDir': '%kernel.project_dir%'
 
   WEM\CommandBundle\:
-    resource: ../src
-    exclude: ../src/{ContaoManager,DependencyInjection}
+    resource: '../src'
+    exclude: '../src/{ContaoManager,DependencyInjection}'
+
+  WEM\CommandBundle\Controller\BackendCommandController:
+    arguments:
+      $kernel: '@kernel'
+    public: false
