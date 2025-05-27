@@ -32,20 +32,7 @@ class ContaoUtilsCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument(name: 'command', mode: InputArgument::REQUIRED, description: 'Option description',
-                suggestedValues: [
-                    "about",
-                    "list",
-                    "cache-clear",
-                    "cache-warmup",
-                    "contao-symlinks",
-                    "contao-resize-images",
-                    "debug",
-                    "env-dump",
-                    "lint",
-                    "mailer-test",
-                    "router-match",
-                ]);
+            ->addArgument( 'command', InputArgument::REQUIRED, 'Option description');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

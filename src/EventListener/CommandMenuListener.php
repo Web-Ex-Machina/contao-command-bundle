@@ -41,7 +41,7 @@ final readonly class CommandMenuListener
 
         $node = $factory
             ->createItem('my-module', ['route' => BackendCommandController::class])
-            ->setLabel('My Modules')
+            ->setLabel('Commandes')
             ->setLinkAttribute('title', 'Title')
             ->setLinkAttribute('class', 'my-module')
             ->setCurrent(

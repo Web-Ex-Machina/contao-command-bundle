@@ -17,13 +17,18 @@ namespace WEM\CommandBundle\Controller;
 use Contao\CoreBundle\Controller\AbstractBackendController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 
 #[Route('%contao.backend.route_prefix%/commands', name: self::class, defaults: ['_scope' => 'backend'])]
+#[IsGranted('ROLE_ADMIN', message: 'Access restricted to administrators.')]
 class BackendCommandController extends AbstractBackendController
 {
+
     public function __invoke(): Response
     {
-        return $this->render('backcommands.html.twig', [
+
+        return $this->render('@Contao/command_center/commands.html.twig', [
             'error' => 'Oh no, an error!',
             'title' => 'My title',
             'headline' => 'My headline',
