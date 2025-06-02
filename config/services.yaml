@@ -9,8 +9,3 @@ services:
   WEM\CommandBundle\:
     resource: '../src'
     exclude: '../src/{ContaoManager,DependencyInjection}'
-
-  WEM\CommandBundle\Controller\BackendCommandController:
-    arguments:
-      $kernel: '@kernel'
-    public: false

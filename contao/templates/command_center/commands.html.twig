@@ -1,15 +1,15 @@
 {% extends "@Contao/be_main" %}
-
+{% trans_default_domain 'CommandBundle' %}
 {% block main_content %}
   <div class="tl_listing_container">
 
     <form>
       <fieldset>
-        <label for="commande">Commande</label>
+        <label for="commande">{{ "label" | trans}}</label>
         <select name="commande" id="commande" required>
-          <option selected disabled value="">Select a command</option>
+          <option selected disabled value="">{{ "select_choice_command" | trans}}</option>
           {% for key, commande in commandes %}
-            <option value="{{ key }}">{{ commande }}</option>
+            <option value="{{ key }}">{{ commande | trans}}</option>
           {% endfor %}
         </select>
         <input type="submit" value="Submit">

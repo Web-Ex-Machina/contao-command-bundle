@@ -25,11 +25,12 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[IsGranted('ROLE_ADMIN', message: 'Access restricted to administrators.')]
 class BackendCommandController extends AbstractBackendController
 {
-    public function __construct(private readonly KernelInterface $kernel)
+    public function __construct(private readonly KernelInterface $kernel, private readonly TranslatorInterface $translator)
     {
     }
 
@@ -37,32 +38,32 @@ class BackendCommandController extends AbstractBackendController
     public function __invoke(Request $request): Response
     {
         $commandes = [
-            'about' => 'À propos de Contao',
-            'cache-clear' => 'Vider le cache',
-            'cache-warmup' => 'Recharger le cache',
-            'symlinks' => 'Reconstruire les liens symboliques',
-            'resize-images' => 'Redimensionner les images qui ne le seraient pas',
+            'about' => 'select.about',
+            'cache-clear' => 'select.cache-clear',
+            'cache-warmup' => 'select.cache-warmup',
+            'symlinks' => 'select.symlinks',
+            'resize-images' => 'select.resize-images',
 
-            'debug-autowiring' => 'List classes/interfaces you can use for autowiring',
-            'debug-config' => 'Dump the current configuration for an extension',
-            'debug-container' => 'Display current services for an application',
-            'debug-contao-twig' => 'Displays the Contao template hierarchy.',
-            'debug-dca' => 'Dumps the DCA configuration for a table.',
-            'debug-dotenv' => 'List all dotenv files with variables and values',
-            'debug-event-dispatcher' => 'Display configured listeners for an application',
-            'debug-firewall' => 'Display information about your security firewall(s)',
-            'debug-fragments' => 'Displays the fragment controller configuration.',
-            'debug-messenger' => 'List messages you can dispatch using the message buses',
-            'debug-pages' => 'Displays the page controller configuration.',
-            'debug-plugins' => 'Displays the Contao Manager plugin configurations.',
-            'debug-router ' => 'Display current routes for an application',
-            'debug-translation' => 'Display translation messages information',
-            'debug-twig' => 'Show a list of twig functions, filters, globals and tests',
+            'debug-autowiring' => 'select.debug.autowiring',
+            'debug-config' => 'select.debug.config',
+            'debug-container' => 'select.debug.container',
+            'debug-contao-twig' => 'select.debug.contao-twig',
+            'debug-dca' => 'select.debug.dca',
+            'debug-dotenv' => 'select.debug.dotenv',
+            'debug-event-dispatcher' => 'select.debug.event-dispatcher',
+            'debug-firewall' => 'select.debug.firewall',
+            'debug-fragments' => 'select.debug.fragments',
+            'debug-messenger' => 'select.debug.messenger',
+            'debug-pages' => 'select.debug.pages',
+            'debug-plugins' => 'select.debug.plugins',
+            'debug-router ' => 'select.debug.router',
+            'debug-translation' => 'select.debug.translation',
+            'debug-twig' => 'select.debug.twig',
 
-            'env-dump' => 'Compiler les fichiers .env vers .env.local.php',
-            'lint-container' => 'Verifier la validité du conteneur de configuration',
+            'env-dump' => 'select.env-dump',
+            'lint-container' => 'select.lint-container',
 //            'mailer-test' => 'Test mailer',
-            'router-match' => 'Afficher la listes des routes disponibles.'
+            'router-match' => 'select.router-match'
         ];
 
         $commande = $request->query->get('commande');
@@ -128,8 +129,8 @@ class BackendCommandController extends AbstractBackendController
         }
 
         return $this->render('@Contao/command_center/commands.html.twig', [
-            'title' => 'Lancer une commande',
-            'headline' => 'Lancer une commande',
+            'title' => $this->translator->trans('title.launch-command', [], 'CommandBundle'),
+            'headline' => $this->translator->trans('title.headline-command', [], 'CommandBundle'),
             'commandes' => $commandes,
             'retour'=> isset($converter)?$converter->convert($content):false
         ]);
