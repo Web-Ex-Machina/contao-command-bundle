@@ -45,7 +45,8 @@ final readonly class CommandMenuListener
             ->setLinkAttribute('title', 'Title')
             ->setLinkAttribute('class', 'my-module')
             ->setCurrent(
-                $this->requestStack->getCurrentRequest()->get('_controller') === BackendCommandController::class
+                $this->requestStack->getCurrentRequest()
+                    ->get('_controller') === BackendCommandController::class
             )
         ;
 

@@ -15,23 +15,25 @@ declare(strict_types=1);
 namespace WEM\CommandBundle\Controller;
 
 use Contao\CoreBundle\Controller\AbstractBackendController;
+use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
-use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[IsGranted('ROLE_ADMIN', message: 'Access restricted to administrators.')]
 class BackendCommandController extends AbstractBackendController
 {
-    public function __construct(private readonly KernelInterface $kernel, private readonly TranslatorInterface $translator)
-    {
+    public function __construct(
+        private readonly KernelInterface $kernel,
+        private readonly TranslatorInterface $translator
+    ) {
     }
 
     #[Route('%contao.backend.route_prefix%/commands', name: self::class, defaults: ['_scope' => 'backend'])]
@@ -62,17 +64,17 @@ class BackendCommandController extends AbstractBackendController
 
             'env-dump' => 'select.env-dump',
             'lint-container' => 'select.lint-container',
-//            'mailer-test' => 'Test mailer',
-            'router-match' => 'select.router-match'
+            // 'mailer-test' => 'Test mailer',
+            'router-match' => 'select.router-match',
         ];
 
         $commande = $request->query->get('commande');
-        $content="";
+        $content = '';
         if (isset($commande)) {
             $application = new Application($this->kernel);
             $application->setAutoExit(false);
 
-            $trueCommande = match($commande){
+            $trueCommande = match ($commande) {
                 'about' => 'about',
                 'cache-clear' => 'cache:clear',
                 'cache-warmup' => 'cache:warmup',
@@ -93,28 +95,26 @@ class BackendCommandController extends AbstractBackendController
                 'debug-event-dispatcher' => 'debug:event-dispatcher',
                 'debug-firewall' => 'debug:firewall',
                 'debug-fragments' => ' debug:fragments',
-                'debug-messenger'  => 'debug:messenger',
+                'debug-messenger' => 'debug:messenger',
                 'debug-pages' => 'debug:pages',
                 'debug-plugins' => 'debug:plugins',
                 'debug-router ' => 'debug:router',
-                'debug-translation'  => 'debug:translation',
+                'debug-translation' => 'debug:translation',
                 'debug-twig' => 'debug:twig',
-                
+
                 default => 'list'
             };
 
-
             $input = new ArrayInput([
                 'command' => $trueCommande,
-                // (optional) define the value of command arguments
-                //'fooArgument' => 'barValue',
+                // (optional) define the value of command arguments fooArgument' => 'barValue',
                 // (optional) pass options to the command
                 '--env' => 'prod',
                 // (optional) pass options without value
                 '--no-debug' => true,
             ]);
 
-            \set_time_limit(300);
+            set_time_limit(300);
             // You can use NullOutput() if you don't need the output
             $output = new BufferedOutput(
                 OutputInterface::VERBOSITY_NORMAL,
@@ -132,7 +132,7 @@ class BackendCommandController extends AbstractBackendController
             'title' => $this->translator->trans('title.launch-command', [], 'CommandBundle'),
             'headline' => $this->translator->trans('title.headline-command', [], 'CommandBundle'),
             'commandes' => $commandes,
-            'retour'=> isset($converter)?$converter->convert($content):false
+            'retour' => isset($converter) ? $converter->convert($content) : false,
         ]);
     }
 }

@@ -32,7 +32,7 @@ class ContaoUtilsCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument( 'command', InputArgument::REQUIRED, 'Option description');
+            ->addArgument('command', InputArgument::REQUIRED, 'Option description');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

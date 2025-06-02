@@ -28,13 +28,10 @@ class Plugin implements BundlePluginInterface, RoutingPluginInterface
 {
     public function getBundles(ParserInterface $parser): array
     {
-        return [
-            BundleConfig::create(CommandBundle::class)
-                ->setLoadAfter([ContaoCoreBundle::class]),
-        ];
+        return [BundleConfig::create(CommandBundle::class)->setLoadAfter([ContaoCoreBundle::class])];
     }
 
-    public function getRouteCollection(LoaderResolverInterface $resolver, KernelInterface $kernel): ?RouteCollection
+    public function getRouteCollection(LoaderResolverInterface $resolver, KernelInterface $kernel): RouteCollection|null
     {
         return $resolver
             ->resolve(__DIR__ . '/../Controller', 'attribute')
