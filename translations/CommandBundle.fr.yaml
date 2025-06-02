@@ -29,3 +29,4 @@ select:
   lint-container: "Verifier la validité du conteneur de configuration"
   mailer-test: "Permet de tester l’envoi de mail (non disponible pour le moment)"
   router-match: "Afficher la listes des routes disponibles."
+submit_button: 'Envoyer'
